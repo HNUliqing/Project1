@@ -1,0 +1,19 @@
+# ignore object files and libraries
+*.o
+*.a
+
+# ignore compiled files
+*.pyc
+*.class
+
+# ignore log files
+*.log
+
+# ignore temp files
+*~
+\#*\#
+
+# ignore OS X files
+.DS_Store
+.vs\*
+.vscode\*
