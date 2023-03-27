@@ -213,6 +213,37 @@ int main()
     // ourShader.setInt("texture2", 1);
     
 
+    //add flat 
+    Shader ourShader_flat("6.1.coordinate_systems.vs", "6.1.coordinate_systems.fs");
+    float vertices_flat[] = {
+        // positions       
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f,
+    };
+    unsigned int indices_flat[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+    unsigned int VBO_flat, VAO_flat, EBO_flat;
+    glGenVertexArrays(1, &VAO_flat);
+    glGenBuffers(1, &VBO_flat);
+    glGenBuffers(1, &EBO_flat);
+
+    glBindVertexArray(VAO_flat);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_flat);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_flat), vertices_flat, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_flat);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_flat), indices_flat, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    ourShader_flat.use();
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -262,6 +293,28 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        // activate shader
+        ourShader_flat.use();
+      
+        // create transformations
+        glm::mat4 model_flat         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        glm::mat4 view_flat          = glm::mat4(1.0f);
+        glm::mat4 projection_flat    = glm::mat4(1.0f);
+        model_flat = glm::rotate(model_flat, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        view_flat  = glm::translate(view_flat, glm::vec3(0.0f, 0.0f, -3.0f));
+        projection_flat = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // retrieve the matrix uniform locations
+        unsigned int modelLoc_flat = glGetUniformLocation(ourShader_flat.ID, "model");
+        unsigned int viewLoc_flat  = glGetUniformLocation(ourShader_flat.ID, "view");
+        // pass them to the shaders (3 different ways)
+        glUniformMatrix4fv(modelLoc_flat, 1, GL_FALSE, glm::value_ptr(model_flat));
+        glUniformMatrix4fv(viewLoc_flat, 1, GL_FALSE, &view_flat[0][0]);
+        // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+        ourShader_flat.setMat4("projection", projection_flat);
+
+        // render container
+        glBindVertexArray(VAO_flat);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -273,7 +326,9 @@ int main()
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-
+    glDeleteVertexArrays(1, &VAO_flat);
+    glDeleteBuffers(1, &VBO_flat);
+    glDeleteBuffers(1, &EBO_flat);
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
