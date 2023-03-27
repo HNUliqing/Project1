@@ -155,8 +155,6 @@ int main()
     // texture coord attribute
     // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     // glEnableVertexAttribArray(1);
-
-
     // // load and create a texture 
     // // -------------------------
     // unsigned int texture1, texture2;
@@ -213,7 +211,7 @@ int main()
     ourShader.use();
     // ourShader.setInt("texture1", 0);
     // ourShader.setInt("texture2", 1);
-
+    
 
     // render loop
     // -----------
