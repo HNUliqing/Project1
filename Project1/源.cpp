@@ -1,4 +1,7 @@
+#include<Windows.h>
 #include <glad/glad.h>
+#include<GL/GLU.h>
+
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
@@ -15,6 +18,87 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+//鼠标点击回调函数
+double mouse_pos[2]={0};
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+    
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+        
+        // 获取鼠标当前位置，存储在xpos和ypos中
+        glfwGetCursorPos(window, &mouse_pos[0], &mouse_pos[1]);
+        // 输出鼠标位置，可以替换成其他想要进行的操作
+        std::cout << "Clicked at position: " << mouse_pos[0] << "  " << mouse_pos[1] << std::endl;
+   
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    GLdouble modelview[16];
+    GLdouble projection[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+
+    GLdouble worldX, worldY, worldZ;
+    gluUnProject(mouse_pos[0], viewport[3] - mouse_pos[1], 0, modelview, projection, viewport, &worldX, &worldY, &worldZ);
+
+    std::cout << "Cursor at : " << worldX << " - " << worldY << " - " << worldZ << std::endl;
+     }
+}
+//获取鼠标在世界坐标系中位置
+// void get_mouse_real_pos()
+// {
+//     GLint viewport[4];
+//     glGetIntegerv(GL_VIEWPORT, viewport);
+//     GLfloat modelview[16];
+//     GLfloat projection[16];
+//     glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+//     glGetFloatv(GL_PROJECTION_MATRIX, projection);
+//     GLdouble posX, posY, posZ;
+//     gluUnProject(mouse_pos[0], viewport[3] - mouse_pos[1], 0, modelview, projection, viewport, &posX, &posY, &posZ);
+
+// }
+void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
+{
+   
+}
+
+//下面是一个使用Möller-Trumbore算法检测射线与三角形相交的示例代码：
+bool IntersectTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, float& distance)
+{
+    const float EPSILON = 0.0000001f;
+    glm::vec3 edge1, edge2, h, s, q;
+    float a, f, u, v;
+
+    edge1 = v2 - v1;
+    edge2 = v3 - v1;
+
+    h = glm::cross(rayDirection, edge2);
+    a = glm::dot(edge1, h);
+
+    if (a > -EPSILON && a < EPSILON)
+        return false;   
+
+    f = 1.0f / a;
+    s = rayOrigin - v1;
+
+    u = f * glm::dot(s, h);
+
+    if (u < 0.0f || u > 1.0f)
+        return false;
+
+    q = glm::cross(s, edge1);
+
+    v = f * glm::dot(rayDirection, q);
+
+    if (v < 0.0f || u + v > 1.0f)
+        return false;
+
+    distance = f * glm::dot(edge2, q);
+
+    if (distance > EPSILON)
+        return true;
+
+    return false;
+}
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -61,7 +145,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -84,47 +168,47 @@ int main()
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f,  
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f,  
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f,  
+        -0.5f, -0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f,  
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f, -0.5f,  
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f, -0.5f
     };
     // world space positions of our cubes
     glm::vec3 cubePositions[] = {
@@ -139,6 +223,15 @@ int main()
         glm::vec3(1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+    int index[10]={0};
+    glm::vec3 vertices_real[36];
+    //将坐标转换成空间中真实坐标
+    for(int i=0;i<36;i++)
+    {
+        vertices_real[i]=glm::vec3(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+    }
+    // glm::vec3 rayOrigin = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
+    // glm::vec3 rayDirection = glm::normalize(glm::vec3(worldX, worldY, worldZ) - rayOrigin);
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -149,7 +242,7 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
@@ -173,8 +266,8 @@ int main()
          -0.05f,   0.0025f,   0.0f ,
            0.0025f,  0.05f,     0.0f,
           -0.0025f,  0.05f,     0.0f,
-          -0.0025f,  -0.05f,     0.0f,
-           0.0025f,  -0.05f,     0.0f 
+          -0.0025f,  -0.05f,    0.0f,
+           0.0025f,  -0.05f,    0.0f 
     };
     unsigned int indices_flat[] = {
         0, 1, 3, // first triangle
