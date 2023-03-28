@@ -19,6 +19,6 @@
 
 .vscode/*
 
-x64/*
+x64/
 
-Project1/x64/*
+Project1/x64/
