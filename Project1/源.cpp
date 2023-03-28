@@ -20,85 +20,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 //鼠标点击回调函数
 double mouse_pos[2]={0};
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-    
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
-        
-        // 获取鼠标当前位置，存储在xpos和ypos中
-        glfwGetCursorPos(window, &mouse_pos[0], &mouse_pos[1]);
-        // 输出鼠标位置，可以替换成其他想要进行的操作
-        std::cout << "Clicked at position: " << mouse_pos[0] << "  " << mouse_pos[1] << std::endl;
-   
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-    glGetDoublev(GL_PROJECTION_MATRIX, projection);
-
-    GLdouble worldX, worldY, worldZ;
-    gluUnProject(mouse_pos[0], viewport[3] - mouse_pos[1], 0, modelview, projection, viewport, &worldX, &worldY, &worldZ);
-
-    std::cout << "Cursor at : " << worldX << " - " << worldY << " - " << worldZ << std::endl;
-     }
-}
-//获取鼠标在世界坐标系中位置
-// void get_mouse_real_pos()
-// {
-//     GLint viewport[4];
-//     glGetIntegerv(GL_VIEWPORT, viewport);
-//     GLfloat modelview[16];
-//     GLfloat projection[16];
-//     glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-//     glGetFloatv(GL_PROJECTION_MATRIX, projection);
-//     GLdouble posX, posY, posZ;
-//     gluUnProject(mouse_pos[0], viewport[3] - mouse_pos[1], 0, modelview, projection, viewport, &posX, &posY, &posZ);
-
-// }
-void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
-{
-   
-}
-
-//下面是一个使用Möller-Trumbore算法检测射线与三角形相交的示例代码：
-bool IntersectTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, float& distance)
-{
-    const float EPSILON = 0.0000001f;
-    glm::vec3 edge1, edge2, h, s, q;
-    float a, f, u, v;
-
-    edge1 = v2 - v1;
-    edge2 = v3 - v1;
-
-    h = glm::cross(rayDirection, edge2);
-    a = glm::dot(edge1, h);
-
-    if (a > -EPSILON && a < EPSILON)
-        return false;   
-
-    f = 1.0f / a;
-    s = rayOrigin - v1;
-
-    u = f * glm::dot(s, h);
-
-    if (u < 0.0f || u > 1.0f)
-        return false;
-
-    q = glm::cross(s, edge1);
-
-    v = f * glm::dot(rayDirection, q);
-
-    if (v < 0.0f || u + v > 1.0f)
-        return false;
-
-    distance = f * glm::dot(edge2, q);
-
-    if (distance > EPSILON)
-        return true;
-
-    return false;
-}
+//使用Möller-Trumbore算法检测射线与三角形相交的示例代码：
+bool IntersectTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, float& distance);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -118,6 +43,68 @@ float fov = 45.0f;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+//记录是否被鼠标点击
+int index[10]={0};
+// set up vertex data (and buffer(s)) and configure vertex attributes
+// ------------------------------------------------------------------
+float vertices[] = {
+    -0.5f, -0.5f, -0.5f,  
+        0.5f, -0.5f, -0.5f,  
+        0.5f,  0.5f, -0.5f,  
+        0.5f,  0.5f, -0.5f,  
+    -0.5f,  0.5f, -0.5f,  
+    -0.5f, -0.5f, -0.5f,  
+
+    -0.5f, -0.5f,  0.5f,  
+        0.5f, -0.5f,  0.5f,  
+        0.5f,  0.5f,  0.5f,  
+        0.5f,  0.5f,  0.5f,  
+    -0.5f,  0.5f,  0.5f,  
+    -0.5f, -0.5f,  0.5f,  
+
+    -0.5f,  0.5f,  0.5f,  
+    -0.5f,  0.5f, -0.5f,  
+    -0.5f, -0.5f, -0.5f,  
+    -0.5f, -0.5f, -0.5f,  
+    -0.5f, -0.5f,  0.5f,  
+    -0.5f,  0.5f,  0.5f,  
+
+        0.5f,  0.5f,  0.5f,  
+        0.5f,  0.5f, -0.5f,  
+        0.5f, -0.5f, -0.5f,  
+        0.5f, -0.5f, -0.5f,  
+        0.5f, -0.5f,  0.5f,  
+        0.5f,  0.5f,  0.5f,  
+
+    -0.5f, -0.5f, -0.5f,  
+        0.5f, -0.5f, -0.5f,  
+        0.5f, -0.5f,  0.5f,  
+        0.5f, -0.5f,  0.5f,  
+    -0.5f, -0.5f,  0.5f,  
+    -0.5f, -0.5f, -0.5f,  
+
+    -0.5f,  0.5f, -0.5f,  
+        0.5f,  0.5f, -0.5f,  
+        0.5f,  0.5f,  0.5f,  
+        0.5f,  0.5f,  0.5f,  
+    -0.5f,  0.5f,  0.5f,  
+    -0.5f,  0.5f, -0.5f
+};
+// world space positions of our cubes
+glm::vec3 cubePositions[] = {
+    glm::vec3(0.0f,  0.0f,  0.0f),
+    glm::vec3(2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3(2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3(1.3f, -2.0f, -2.5f),
+    glm::vec3(1.5f,  2.0f, -2.5f),
+    glm::vec3(1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+
+glm::vec3 vertices_real[36];
 
 int main()
 {
@@ -165,66 +152,6 @@ int main()
     // ------------------------------------
     Shader ourShader("7.3.camera.vs", "7.3.camera.fs");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-        -0.5f,  0.5f, -0.5f,  
-        -0.5f, -0.5f, -0.5f,  
-
-        -0.5f, -0.5f,  0.5f,  
-         0.5f, -0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f,  
-        -0.5f, -0.5f,  0.5f,  
-
-        -0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f, -0.5f,  
-        -0.5f, -0.5f, -0.5f,  
-        -0.5f, -0.5f, -0.5f,  
-        -0.5f, -0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f,  
-
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-
-        -0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f,  0.5f,  
-         0.5f, -0.5f,  0.5f,  
-        -0.5f, -0.5f,  0.5f,  
-        -0.5f, -0.5f, -0.5f,  
-
-        -0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f, -0.5f
-    };
-    // world space positions of our cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f,  2.0f, -2.5f),
-        glm::vec3(1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-    int index[10]={0};
-    glm::vec3 vertices_real[36];
     //将坐标转换成空间中真实坐标
     for(int i=0;i<36;i++)
     {
@@ -329,6 +256,8 @@ int main()
         glBindVertexArray(VAO);
         for (unsigned int i = 0; i < 10; i++)
         {
+            if(index[i]==1)
+                continue;
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             model = glm::translate(model, cubePositions[i]);
@@ -450,4 +379,78 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         fov = 1.0f;
     if (fov > 45.0f)
         fov = 45.0f;
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+    
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        // 获取鼠标当前位置，存储在xpos和ypos中
+        glfwGetCursorPos(window, &mouse_pos[0], &mouse_pos[1]);
+        // 输出鼠标位置，可以替换成其他想要进行的操作
+        std::cout << "Clicked at position: " << mouse_pos[0] << "  " << mouse_pos[1] << std::endl;
+   
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+
+        GLdouble modelview[16];
+        GLdouble projection[16];
+        glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+        glGetDoublev(GL_PROJECTION_MATRIX, projection);
+
+        GLdouble worldX, worldY, worldZ;
+        GLfloat depth;
+        glReadPixels(mouse_pos[0], viewport[3] - mouse_pos[1], 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+        depth = depth * 2.0f - 1.0f;
+        
+        gluUnProject(mouse_pos[0], viewport[3] - mouse_pos[1], 0, modelview, projection, viewport, &worldX, &worldY, &worldZ);
+        glm::vec3 temp=glm::vec3(worldX,worldY,worldZ);
+        std::cout << "Cursor at : " << worldX << " - " << worldY << " - " << worldZ << std::endl;
+        float distance=0;
+        bool judge=IntersectTriangle(cameraPos,temp,vertices_real[0],vertices_real[1],vertices_real[2],distance);
+        if(judge==true)
+        {
+            std::cout<<"distance:"<<distance<<std::endl;
+            index[0]=1;
+        }
+        
+     }
+}
+
+bool IntersectTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, float& distance)
+{
+    const float EPSILON = 0.0000001f;
+    glm::vec3 edge1, edge2, h, s, q;
+    float a, f, u, v;
+
+    edge1 = v2 - v1;
+    edge2 = v3 - v1;
+
+    h = glm::cross(rayDirection, edge2);
+    a = glm::dot(edge1, h);
+
+    if (a > -EPSILON && a < EPSILON)
+        return false;   
+
+    f = 1.0f / a;
+    s = rayOrigin - v1;
+
+    u = f * glm::dot(s, h);
+
+    if (u < 0.0f || u > 1.0f)
+        return false;
+
+    q = glm::cross(s, edge1);
+
+    v = f * glm::dot(rayDirection, q);
+
+    if (v < 0.0f || u + v > 1.0f)
+        return false;
+
+    distance = f * glm::dot(edge2, q);
+
+    if (distance > EPSILON)
+        return true;
+
+    return false;
 }
